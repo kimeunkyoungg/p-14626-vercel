@@ -1,6 +1,6 @@
 name: deploy
 env:
-  IMAGE_NAME: app251127
+  IMAGE_NAME: app251127-2
 
 on:
   push:
@@ -75,7 +75,7 @@ jobs:
 
       - name: export image name
         id: export_image
-        run: echo "image_name=app251126" >> $GITHUB_OUTPUT
+        run: echo "image_name=app251127" >> $GITHUB_OUTPUT
 
       - name: 빌드 앤 푸시
         uses: docker/build-push-action@v3
