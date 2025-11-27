@@ -1,14 +1,14 @@
 name: deploy
 env:
-  IMAGE_NAME: app251126
+  IMAGE_NAME: app251127
 
 on:
   push:
     paths:
       - ".github/workflows/**"
-      - "src/**"
-      - "build.gradle.kts"
-      - "Dockerfile"
+      - "backend/src/**"
+      - "backend/build.gradle.kts"
+      - "backend/Dockerfile"
     branches:
       - main
 
