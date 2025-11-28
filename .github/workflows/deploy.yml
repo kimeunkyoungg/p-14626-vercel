@@ -113,8 +113,8 @@ jobs:
           instance-ids: ${{ env.INSTANCE_ID }}
           working-directory: /
           comment: Deploy
-          command: |  
-            IMAGE="ghcr.io/${{ needs.buildImageAndPush.outputs.owner_lc }}/${{ needs.buildImageAndPush.outputs.image_name }}:latest"
+          command: |
+            IMAGE="ghcr.io/kimeunkyoungg/app251127:latest"
             NETWORK="common"
             HEALTH_ENDPOINT="/actuator/health"
             TIMEOUT=60
@@ -131,20 +131,20 @@ jobs:
               NEXT_PORT=8080
             fi
 
-
             echo "Starting new container: $NEXT on port $NEXT_PORT..."
             docker pull "$IMAGE"
             docker stop "$NEXT" 2>/dev/null
             docker rm "$NEXT" 2>/dev/null
+
             docker run -d \
               --network $NETWORK \
               --name "$NEXT" \
               -p "$NEXT_PORT":8080 \
               "$IMAGE"
 
-
             echo "Waiting for health check..."
             START_TIME=$(date +%s)
+
             while true; do
               CONTENT=$(curl -s http://localhost:$NEXT_PORT$HEALTH_ENDPOINT)
 
