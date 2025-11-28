@@ -223,7 +223,7 @@ defaults
 
 frontend http_front
     bind *:80
-    acl host_app1 hdr_beg(host) -i api.glog.oa.gg
+    acl host_app1 hdr_beg(host) -i api.p-14626.qqwas.shop
 
     use_backend http_back_1 if host_app1
 
