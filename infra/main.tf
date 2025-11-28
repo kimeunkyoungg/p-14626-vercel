@@ -192,12 +192,29 @@ docker run -d \
   jc21/nginx-proxy-manager:latest
 
 # ha proxy 설치
-
 ## 설정파일을 위한 디렉토리 생성
-mkdir -p ${PWD}/dockerProjects/ha_proxy_1/volumes/usr/local/etc/haproxy
+mkdir -p /dockerProjects/ha_proxy_1/volumes/usr/local/etc/haproxy/lua
+
+cat << 'EOF' > /dockerProjects/ha_proxy_1/volumes/usr/local/etc/haproxy/lua/retry_on_502_504.lua
+core.register_action("retry_on_502_504", { "http-res" }, function(txn)
+  local status = txn.sf:status()
+  if status == 502 or status == 504 then
+    txn:Done()
+  end
+end)
+EOF
 
 ## 설정파일 생성
 echo -e "
+global
+    lua-load /usr/local/etc/haproxy/lua/retry_on_502_504.lua
+
+resolvers docker
+    nameserver dns1 127.0.0.11:53
+    resolve_retries       3
+    timeout retry         1s
+    hold valid            10s
+
 defaults
     mode http
     timeout connect 5s
@@ -206,30 +223,29 @@ defaults
 
 frontend http_front
     bind *:80
-    acl host_app1 hdr_beg(host) -i api.p-14626.qwas.shop
+    acl host_app1 hdr_beg(host) -i api.glog.oa.gg
 
     use_backend http_back_1 if host_app1
 
 backend http_back_1
     balance roundrobin
     option httpchk GET /actuator/health
-    default-server inter 2s rise 1 fall 1
+    default-server inter 2s rise 1 fall 1 init-addr last,libc,none resolvers docker
     option redispatch
+    http-response lua.retry_on_502_504
 
     server app_server_1_1 app1_1:8080 check
     server app_server_1_2 app1_2:8080 check
-" > ${PWD}/dockerProjects/ha_proxy_1/volumes/usr/local/etc/haproxy/haproxy.cfg
+" > /dockerProjects/ha_proxy_1/volumes/usr/local/etc/haproxy/haproxy.cfg
 
-## ha_proxy_1 컨테이너 실행
 docker run \
   -d \
   --network common \
   -p 8090:80 \
-  -v /${PWD}/dockerProjects/ha_proxy_1/volumes/usr/local/etc/haproxy:/usr/local/etc/haproxy \
+  -v /dockerProjects/ha_proxy_1/volumes/usr/local/etc/haproxy:/usr/local/etc/haproxy \
   -e TZ=Asia/Seoul \
   --name ha_proxy_1 \
   haproxy
-
 
 # redis 설치
 docker run -d \
