@@ -114,13 +114,11 @@ jobs:
           working-directory: /
           comment: Deploy
           command: |  
-           # 공통 변수
             IMAGE="ghcr.io/${{ needs.buildImageAndPush.outputs.owner_lc }}/${{ needs.buildImageAndPush.outputs.image_name }}:latest"
             NETWORK="common"
             HEALTH_ENDPOINT="/actuator/health"
             TIMEOUT=60
 
-            # 현재 실행 중인 컨테이너 확인
             if docker ps --format '{{.Names}}' | grep -q "app1_1"; then
               CURRENT="app1_1"
               NEXT="app1_2"
@@ -133,7 +131,7 @@ jobs:
               NEXT_PORT=8080
             fi
 
-            # 다음 컨테이너 실행
+
             echo "Starting new container: $NEXT on port $NEXT_PORT..."
             docker pull "$IMAGE"
             docker stop "$NEXT" 2>/dev/null
@@ -145,7 +143,7 @@ jobs:
               -p "$NEXT_PORT":8080 \
               "$IMAGE"
 
-            # 헬스체크 대기
+
             echo "Waiting for health check..."
             START_TIME=$(date +%s)
             while true; do
@@ -168,12 +166,10 @@ jobs:
               sleep 5
             done
 
-            # 기존 컨테이너 중지 및 제거
             echo "Stopping old container: $CURRENT"
             docker stop "$CURRENT" 2>/dev/null
             docker rm "$CURRENT" 2>/dev/null
 
-            # dangling image 제거
             docker image prune -f
 
             echo "✅ Deployment complete. Running container: $NEXT on port $NEXT_PORT"
